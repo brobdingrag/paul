@@ -5,17 +5,16 @@
 
 ![](images/pgs_dist_generations.png)
 
-
 ![](images/population_size_generations.png)
-
 
 ![](images/male_female_meioses.png)
 
-
 ![](images/meioses_events.png)
 
+![](images/pmf_n_embryos.png)
+
+![](images/embryo_ranks.png)
 
 ![](images/embryo_dists.png)
 
 
-![](images/embryo_dists.png)
