@@ -1,5 +1,5 @@
 
-## [Kefitzat_haderech](https://en.wikipedia.org/wiki/Kefitzat_haderech)
+## [Kefitzat haderech](https://en.wikipedia.org/wiki/Kefitzat_haderech)
 
 
 
