@@ -343,7 +343,8 @@ def plot_freq_vs_weight():
                     [before, after],
                     [row["minor_weight"], row["minor_weight"]],
                     color=color,
-                    linewidth=0.2,
+                    linewidth=0.3,
+                    alpha=0.7,
                 )
         return ax
 
