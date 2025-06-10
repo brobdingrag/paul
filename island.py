@@ -1,0 +1,40 @@
+from paul import *
+from setup import *
+from plotting import plot_parameters, plot_simulation_results
+from checks import run_checks
+
+
+def run_generation(generation):
+    get_couples(generation)
+    get_generation_embryos(generation)
+    select_generation_embryos(generation)
+
+
+def main():
+    
+    # Store the preparatory data
+    store_initial_generation()
+
+    # Plot the parameters governing the simulation
+    plot_parameters()
+
+    # Run the simulation over generations
+    for generation in range(N_GENERATIONS):
+        run_generation(generation)
+    
+    # Save the results data
+    save_generation_scores()
+    save_intergenerational_scores()
+
+    # Plot the results
+    plot_simulation_results()
+
+    run_checks()
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+
