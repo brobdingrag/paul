@@ -17,4 +17,7 @@
 
 ![](images/embryo_dists.png)
 
+![](images/freq_vs_weight.png)
+
+
 

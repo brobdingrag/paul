@@ -10,6 +10,12 @@ def run_generation(generation):
     select_generation_embryos(generation)
 
 
+def save_results():
+    save_generation_scores()
+    save_intergenerational_scores()
+    save_freq_vs_weight()
+
+
 def main():
     
     # Store the preparatory data
@@ -21,10 +27,9 @@ def main():
     # Run the simulation over generations
     for generation in range(N_GENERATIONS):
         run_generation(generation)
-    
-    # Save the results data
-    save_generation_scores()
-    save_intergenerational_scores()
+
+    # Save the results
+    save_results()
 
     # Plot the results
     plot_simulation_results()

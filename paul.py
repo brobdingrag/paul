@@ -588,6 +588,48 @@ def load_generation_scores():
 
 
 
+def save_freq_vs_weight():
+    dfs = load_df("height_score")
+    dfs.set_index(['chrom', 'pos'], inplace=True)
+
+    for generation in tqdm(range(N_GENERATIONS + 1)):
+        
+        names = load_generation_names(generation)
+        
+        dc = pd.Series(index=dfs.index, data=np.zeros(len(dfs)), dtype=int)
+        
+        for name in names:
+            dft = load_df(f"score_genomes/{generation}/{name}")
+            person_count = dft.set_index(['chrom', 'pos']).sum(axis=1)
+            dc += person_count
+        
+        freq = dc / len(names) / 2
+        
+        dfs[f"freq_gen_{generation}"] = freq
+
+    effect_is_ref = dfs.effect_allele == dfs.ref
+    effect_is_alt = dfs.effect_allele == dfs.alt
+    dft['alt_weight'] = np.nan
+    dfs.loc[effect_is_alt, "alt_weight"] = dfs.effect_weight
+    dfs.loc[effect_is_ref, "alt_weight"] = -1 * dfs.effect_weight
+    dfs['minor_weight'] = np.nan
+    alt_is_major_gen_0 = dfs.freq_gen_0 >= 0.5
+    alt_is_minor_gen_0 = dfs.freq_gen_0 < 0.5
+    dfs.loc[alt_is_minor_gen_0, "minor_weight"] = dfs.alt_weight
+    dfs.loc[alt_is_major_gen_0, "minor_weight"] = -1 * dfs.alt_weight
+    freq_cols = [f"freq_gen_{i}" for i in range(N_GENERATIONS + 1)]
+    dfs.loc[alt_is_major_gen_0, freq_cols] = 1 - dfs.loc[alt_is_major_gen_0, freq_cols]
+
+    save_df(dfs.reset_index(), "freq_vs_weight")
+
+
+
+
+def load_freq_vs_weight():
+    dfs = load_df("freq_vs_weight")
+    dfs = dfs.set_index(['chrom', 'pos'])
+    return dfs
+
 
 
 
