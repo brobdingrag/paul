@@ -5,6 +5,8 @@
 
 ![](images/pgs_dist_generations.png)
 
+![](images/freq_vs_weight_before_after.png)
+
 ![](images/population_size_generations.png)
 
 ![](images/male_female_meioses.png)

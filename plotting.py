@@ -14,7 +14,7 @@ def plot_simulation_results():
     plot_embryo_dists()
     plot_embryo_ranks()
     plot_freq_vs_weight()
-
+    plot_freq_vs_weight_before_after()
 
 def plot_male_female_meiosis_maps():
 
@@ -313,6 +313,7 @@ def plot_embryo_ranks():
 
 def plot_freq_vs_weight():
     dfs = load_freq_vs_weight()
+    mask = [True] * len(dfs)
     mask = dfs.minor_weight.abs() > dfs.minor_weight.abs().quantile(0.8)
 
     fig, axs = square_fig(nrows=3, ncols=3)
@@ -372,6 +373,65 @@ def plot_freq_vs_weight():
         # ax.vline(x=0.5, color='black', linewidth=0.5, alpha=0.5)
 
     save_fig(fig, "freq_vs_weight", pad_inches=0.3)
+
+
+def plot_freq_vs_weight_before_after():
+    dfs = load_freq_vs_weight()
+
+    mask = [True] * len(dfs)
+    mask = dfs.minor_weight.abs() > dfs.minor_weight.abs().quantile(0.8)
+
+    fig, ax = square_fig()
+
+    def _plot_generation(ax, generation):
+        sns.scatterplot(
+            data=dfs[mask],
+            x=f"freq_gen_{generation}",
+            y="minor_weight",
+            ax=ax,
+            color='black',
+            s=4,
+            alpha=0.1,
+            edgecolor='black',
+            linewidth=0.2,
+        )
+        return ax
+
+    for _, row in dfs[mask].iterrows():
+        before, after = row[f"freq_gen_{0}"], row[f"freq_gen_{N_GENERATIONS}"]
+        color = RED if after > before else BLUE
+        ax.plot(
+            [before, after],
+            [row["minor_weight"], row["minor_weight"]],
+            color=color,
+            linewidth=0.3,
+            alpha=0.7,
+        )
+
+
+    # ax = _plot_generation(ax, 0)
+    ax = _plot_generation(ax, N_GENERATIONS)
+
+    # X axis
+    # edge_x = 0.02
+    # ax.set_xlim(-edge_x, 1 + edge_x)
+    ax.set_xlim(0.001, 1)
+    ax.log_xscale()
+    ax.set_xticks([0.001, 0.01, 0.05, 0.1, 0.5, 1])
+    ax.set_xticklabels(["0.1%", "1%", "5%", "10%", "50%", " "])
+    ax.set_xlabel("Frequency")
+
+    # Y axis
+    ax.set_ylim(-0.25, 0.25)
+    ax.sign_yscale(decimals=1)
+    ax.set_ylabel("Effect size")
+
+    # Design
+    ax.remove_top_right_spines()
+    ax.hline(y=0, color='black', linewidth=0.5, alpha=0.5)
+    # ax.vline(x=0.5, color='black', linewidth=0.5, alpha=0.5)
+
+    save_fig(fig, "freq_vs_weight_before_after", pad_inches=0.3)
 
 
 
