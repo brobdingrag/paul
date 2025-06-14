@@ -5,11 +5,16 @@ from matplotlib.lines import Line2D
 from scipy.stats import poisson
 
 
+def iterate_autosomes():
+    for chrom in range(1, 23):
+        yield chrom
+
+
 def get_couples_embryos(generation, couple_num):
 
     dc = load_couples(generation)
 
-    couple = dc[dc.couple_num == couple_num].iloc[0]
+    couple = dc[dc.couple_num == couple_num].squeeze()
 
     check_parents_sex(generation, couple.name_dad, couple.name_mom)
 
@@ -127,10 +132,7 @@ def get_couples(generation):
 def get_gamete_states(generation, name):
     """Get the states of the score sites in a person's (random) gamete"""
     # Get a random meiosis for the person
-    dm = get_meiosis(generation, name)
-
-    meiosis_num = int(dm.meiosis_num.iloc[0])
-    assert dm.meiosis_num.nunique() == 1
+    dm, meiosis_num = get_meiosis(generation, name)
 
     # Load the states of the score sites in the person
     dft = load_score_genome(generation, name)
@@ -138,7 +140,7 @@ def get_gamete_states(generation, name):
     # Determine the states of the gamete's score alleles
     # Initialize the parental chromosome of the gamete
     dft['parental_chrom'] = ""
-    for chrom in range(1, 23):  
+    for chrom in iterate_autosomes():  
         dmt = dm[dm.chrom == chrom]
         for _, chunk in dmt.iterrows():
             parental_chrom = "paternal" if chunk.grandparent == "Grandpa" else "maternal"
@@ -244,7 +246,7 @@ def get_meiosis(generation, name):
     dm = dm[dm.meiosis_num == meiosis_num]
 
     dm = dm.reset_index(drop=True)
-    return dm
+    return dm, meiosis_num
 
 
 def check_parents_sex(generation, name_dad, name_mom):
@@ -364,7 +366,7 @@ def score_genome(dft):
 
 def get_couples_living_embryos(generation, couple_num):
     dc = load_couples(generation)
-    couple = dc[dc.couple_num == couple_num].iloc[0]
+    couple = dc[dc.couple_num == couple_num].squeeze()
 
     if couple.n_embryos == 0:
         return []
@@ -399,7 +401,7 @@ def select_generation_embryos(generation):
 
     # Iterate over the couples
     for couple_num in dc.couple_num:
-        couple = dc[dc.couple_num == couple_num].iloc[0]
+        couple = dc[dc.couple_num == couple_num].squeeze()
 
         # Get the living embryos of the couple (selection)
         living_embryos = get_couples_living_embryos(generation, couple_num)
@@ -446,15 +448,6 @@ def select_generation_embryos(generation):
 def load_generation_names(generation):
     name_to_sex = load_name_to_sex(generation)
     return list(name_to_sex.keys())
-
-
-def load_generation_scores_as_frame(generation):
-    names = load_generation_names(generation)
-    name_to_score = {name: score_genome(load_score_genome(generation, name)) for name in names}
-    scores = pd.Series(name_to_score)
-    dt = scores.to_frame()
-    dt = dt.reset_index().rename(columns={"index": "name", 0: "score"})
-    return dt
 
 
 def load_population_sizes():
@@ -515,10 +508,17 @@ def get_intergenerational_scores(generation=0):
 
     data = []
     for _, couple in dc.iterrows():
+        if couple.n_embryos == 0:
+            continue
+        meiosis_nums = load_dict(f"embryo_meiosis_nums/{generation}/{int(couple.couple_num)}")
+        meiosis_nums = {int(k): v for k, v in meiosis_nums.items()}
         for embryo_num in range(1, int(couple.n_embryos) + 1):
             entry = couple.to_dict()
             entry['embryo_num'] = embryo_num
+            entry['sperm_meiosis_num'] = meiosis_nums[embryo_num]['sperm_meiosis_num']
+            entry['egg_meiosis_num'] = meiosis_nums[embryo_num]['egg_meiosis_num']
             data.append(entry)
+
     df = pd.DataFrame(data)
 
     df = df.astype({'couple_num': int, 'dad': int, 'mom': int, 'n_embryos': int})
@@ -584,10 +584,6 @@ def load_generation_scores():
     return dg
 
 
-
-
-
-
 def save_freq_vs_weight():
     dfs = load_df("height_score")
     dfs.set_index(['chrom', 'pos'], inplace=True)
@@ -621,7 +617,6 @@ def save_freq_vs_weight():
     dfs.loc[alt_is_major_gen_0, freq_cols] = 1 - dfs.loc[alt_is_major_gen_0, freq_cols]
 
     save_df(dfs.reset_index(), "freq_vs_weight")
-
 
 
 

@@ -16,6 +16,7 @@ def plot_simulation_results():
     plot_freq_vs_weight()
     plot_freq_vs_weight_before_after()
 
+
 def plot_male_female_meiosis_maps():
 
     dm = load_df("meioses")

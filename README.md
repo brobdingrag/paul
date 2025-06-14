@@ -3,6 +3,9 @@
 
 
 
+![](images/genomic_prediction_height_corr.jpg)
+
+
 ![](images/pgs_dist_generations.png)
 
 ![](images/freq_vs_weight_before_after.png)
