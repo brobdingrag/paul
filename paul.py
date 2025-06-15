@@ -1,8 +1,15 @@
 from consts import *
 from inventory import *
+from functools import cache
 import multiprocessing as mp
 from matplotlib.lines import Line2D
 from scipy.stats import poisson
+import urllib.request
+from liftover import get_lifter
+
+
+# Get the lifter
+converter_forward = get_lifter('hg19', 'hg38', one_based=True)
 
 
 def iterate_autosomes():
@@ -579,8 +586,10 @@ def load_intergenerational_scores():
     return di
 
 
-def load_generation_scores():
+def load_generation_scores(generation=None):
     dg = load_df("generation_scores")
+    if generation is not None:
+        dg = dg[dg.generation == generation]
     return dg
 
 
@@ -746,6 +755,314 @@ def load_ancestry(generation=None):
     if generation is not None:
         dfa = dfa[dfa.generation == generation]
     return dfa
+
+
+
+@cache
+def load_name_to_id_1kg():
+    id_1kg_to_name = load_id_1kg_to_name()
+    name_to_id_1kg = {name: id_1kg for id_1kg, name in id_1kg_to_name.items()}
+    return name_to_id_1kg
+
+
+@cache
+def load_id_1kg_to_name():
+    dfs = load_df("european_samples")
+    dfs = dfs[~dfs.related]
+    id_1kg_to_name = {id_1kg: i+1 for i, id_1kg in enumerate(dfs.name)}
+    return id_1kg_to_name
+
+
+
+
+
+def store_initial_generation():
+    generation = 0
+    
+    dfs = load_df("european_samples")
+    dfs = dfs[~dfs.related]
+    # rename_map = {name: i+1 for i, name in enumerate(dfs.name)}
+    rename_map = load_id_1kg_to_name()
+
+    df = load_df("height_states")
+
+    ensure_dir(f"data/score_genomes/{generation}")
+    for name_orig, name in rename_map.items():
+        dt = df[['chrom', 'pos', f"{name_orig}_1", f"{name_orig}_2"]].copy()
+        dt.rename(columns={f"{name_orig}_1": "paternal", f"{name_orig}_2": "maternal"}, inplace=True)
+        save_df(dt, f"score_genomes/{generation}/{name}")
+        
+    name_orig_to_sex = dfs.set_index("name").sex.to_dict()
+    name_to_sex = {rename_map[name]: name_orig_to_sex[name] for name in rename_map}
+    ensure_dir(f"data/sexes/{generation}")
+    save_dict(name_to_sex, f"sexes/{generation}/name_to_sex")
+
+
+
+
+
+def store_height_score():
+    df = load_df("height_states")
+    cols = ['chrom', 'pos', 'effect_allele', 'ref', 'alt', 'other_allele', 'effect_weight', 'rsid']
+    dfs = df[cols]
+    save_df(dfs, "height_score")
+
+
+
+
+def lift_row_forward(row, return_type='pos'):
+
+    assert return_type in ['pos', 'strand', 'both']
+    conversion = converter_forward.convert_coordinate(str(row.chrom), row.pos_hg19)
+    if len(conversion) > 1:
+        raise ValueError(f"Multiple conversions for {row.chrom}:{row.pos_hg19}")
+    if len(conversion) == 0:
+        if return_type == 'pos':
+            return None
+        elif return_type == 'strand':
+            return None
+        elif return_type == 'both':
+            return None, None
+    conversion = conversion[0]
+    if f"chr{row.chrom}" != conversion[0]:
+        pos, strand = None, None
+    else:
+        pos = conversion[1]
+        strand = conversion[2]
+    if return_type == 'pos':
+        return pos
+    elif return_type == 'strand':
+        return strand
+    elif return_type == 'both':
+        return pos, strand
+
+
+def store_ukb_pca_map():
+
+    print("Downloading SNP PCA map...")
+
+    file_url = "biobank.ctsu.ox.ac.uk/ukb/ukb/auxdata/snp_pca_map.txt"
+
+    urllib.request.urlretrieve(f"https://{file_url}", "data/snp_pca_map.txt")
+
+    # Load the SNP PCA mapping data from the UK Biobank
+    dt = pd.read_csv(f"data/snp_pca_map.txt", sep="\t", header=None)
+
+    # Rename columns based on the file structure
+    # First 7 columns contain SNP information, followed by PC loadings
+    column_names = ['chrom', 'rsid', 'cm_location', 'pos_hg19', 
+                    'allele1', 'allele2', 'freq_allele1']
+
+    dt = dt.iloc[:, :7]
+    dt.columns = column_names
+
+    # Remove cm_location column if it contains only one unique value (uninformative)
+    if n_unique(dt.cm_location) == 1:
+        dt.drop("cm_location", axis=1, inplace=True)
+
+    print("Lifting SNPs to hg38...")
+    # Convert hg19 positions to hg38 using the lift_row_forward function
+    # This returns both the new position and strand information
+    dt['pos'] = dt.apply(lambda row: lift_row_forward(row, return_type='pos'), axis=1)
+    dt['strand'] = dt.apply(lambda row: lift_row_forward(row, return_type='strand'), axis=1)
+
+    # Reorganize columns for better readability
+    dt = place_first(dt, ['chrom', 'pos', 'strand', 'allele1', 'allele2', 'freq_allele1'])
+
+    # Save SNPs that couldn't be lifted to hg38 (NA positions) for later analysis
+    dtu = dt[dt.pos.isna()].copy()
+    print(f"{len(dtu)} SNPs couldn't be lifted to hg38")
+
+    # Continue with SNPs that were successfully lifted to hg38
+    dt = dt[dt.pos.notna()]
+    assert no_na(dt.pos)  # Verify no missing positions
+    assert no_na(dt.strand)  # Verify no missing strand information
+    dt.pos = dt.pos.astype(int)  # Convert positions to integers
+
+    # Fix strand flips for SNPs on the negative strand
+    # Convert alleles to their complementary bases
+    complement = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G'}
+    dt.loc[dt.strand == "-", "allele1"] = dt.loc[dt.strand == "-"]['allele1'].map(complement)
+    dt.loc[dt.strand == "-", "allele2"] = dt.loc[dt.strand == "-"]['allele2'].map(complement)
+
+    # Final formatting improvements
+    dt.rename(columns={"allele1": "allele_1", "allele2": "allele_2",
+                       "freq_allele1": "freq_allele_1"}, inplace=True)
+    dt = place_first(dt, ['chrom', 'pos', 'strand'])
+    
+    save_df(dt, "ukb_pca_map")
+    print("Done!")
+
+
+def load_ukb_pca_map():
+    dt = load_df("ukb_pca_map")
+    return dt
+
+
+def get_1kg_snps(chrom, positions_needed, chunksize=100_000):
+    # Process the file in chunks
+    chunks = []
+    for chunk in pd.read_csv(f"data/genomes3/processed_chr{chrom}.csv", chunksize=chunksize, dtype={'pos': int}):
+        filtered_chunk = chunk[chunk['pos'].isin(positions_needed)]
+        chunks.append(filtered_chunk)
+
+    # Combine into a single DataFrame
+    dv = pd.concat(chunks)
+
+    dv['chrom'] = chrom
+    dv = place_first(dv, "chrom")
+
+    return dv
+
+def get_positions_needed(df, chrom):
+    return set(df[df.chrom == chrom].pos)
+
+
+def store_1kg_array(dt, array_name, ncores=8):
+    tasks = [(chrom, get_positions_needed(dt, chrom)) for chrom in iterate_autosomes()]
+        
+    with mp.Pool(processes=ncores) as pool:
+        results = pool.starmap(get_1kg_snps, tasks)
+
+    dvt = pd.concat(results, ignore_index=True)
+
+    dvt = dt.merge(dvt, on=['chrom', 'pos'])
+
+    dvt['allele_1_complement'] = dvt.allele_1.map(get_complement)
+    dvt['allele_2_complement'] = dvt.allele_2.map(get_complement)
+
+    dvt_direct = dvt[
+            ((dvt.allele_1 == dvt.ref) & (dvt.allele_2 == dvt.alt)) |
+            ((dvt.allele_1 == dvt.alt) & (dvt.allele_2 == dvt.ref))
+            ]
+
+    dvt_complement = dvt[
+            ((dvt.allele_1_complement == dvt.ref) & (dvt.allele_2_complement == dvt.alt)) |
+            ((dvt.allele_1_complement == dvt.alt) & (dvt.allele_2_complement == dvt.ref))
+            ]
+
+    print(f"Strand flipped {len(dvt_complement)} SNPs")
+
+    assert len(
+        set(dvt_direct.chrom.astype(str) + "_" + dvt_direct.pos.astype(str)
+            ).intersection(
+        set(dvt_complement.chrom.astype(str) + "_" + dvt_complement.pos.astype(str)))
+        ) == 0
+
+    dvt_complement["allele_1"] = dvt_complement["allele_1_complement"]
+    dvt_complement["allele_2"] = dvt_complement["allele_2_complement"]
+
+    dvt = pd.concat([dvt_direct, dvt_complement])
+    dvt.drop(columns=['allele_1_complement', 'allele_2_complement'], inplace=True)
+
+    n_snps_missing = len(set(dt.chrom.astype(str) + "_" + dt.pos.astype(str))
+                    ) - len(set(dvt.chrom.astype(str) + "_" + dvt_direct.pos.astype(str)))
+
+    if n_snps_missing > 0:
+        print(f"Missing {n_snps_missing} SNPs")
+    else:
+        print("No SNPs missing")
+        
+
+    ensure_dir("data/1kg_arrays")
+    save_df(dvt, f"1kg_arrays/{array_name}")
+
+
+@cache
+def load_1kg_array(array_name):
+    dvt = load_df(f"1kg_arrays/{array_name}")
+    assert all(((dvt.allele_1 == dvt.ref) & (dvt.allele_2 == dvt.alt) | 
+        (dvt.allele_1 == dvt.alt) & (dvt.allele_2 == dvt.ref)))
+    return dvt
+
+
+def store_ukb_pca_array():
+    dt = load_ukb_pca_map()
+    store_1kg_array(dt, "ukb_pca")
+
+
+def get_complement(allele):
+    complement = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G'}
+    return complement.get(allele, allele)
+
+
+
+def map_ancestral_chunk_to_member_1kg(ancestor, ancestor_member):
+    name_to_id_1kg = load_name_to_id_1kg()
+
+    suffix = 1 if ancestor_member == "paternal" else 2
+    id_1kg = name_to_id_1kg[ancestor]
+    member_1kg = f"{id_1kg}_{suffix}"
+    return member_1kg
+
+
+def load_person_dvt(generation, name, array_name):
+    dvt = load_1kg_array(array_name)
+    
+    dfa = load_ancestry(generation=generation)
+    dfa = dfa[dfa.name == name]
+    
+    obligatory_cols = ['chrom', 'pos', 'allele_1', 'allele_2', 'ref', 'alt']
+    
+    data_paternal = []
+    data_maternal = []
+    for _, chunk in dfa.iterrows():
+
+        member_1kg = map_ancestral_chunk_to_member_1kg(chunk.ancestor, chunk.ancestor_member)
+        
+        overlap_mask = (dvt.chrom == chunk.chrom) & (dvt.pos.between(chunk.pos_start, chunk.pos_end))
+        
+        dvt_chunk = dvt.loc[overlap_mask, obligatory_cols + [member_1kg]]
+        dvt_chunk = dvt_chunk.rename(columns={member_1kg: chunk.member})
+        
+        if chunk.member == "paternal":
+            data_paternal.append(dvt_chunk)
+        else:
+            data_maternal.append(dvt_chunk)
+
+    dvt_paternal = pd.concat(data_paternal, ignore_index=True)
+    dvt_maternal = pd.concat(data_maternal, ignore_index=True)
+
+    dvt = dvt_paternal.merge(dvt_maternal, on=obligatory_cols, how='outer')
+
+    assert dvt.paternal.isna().sum() == dvt.maternal.isna().sum() == 0
+
+    return dvt
+
+
+def get_person_frac_hom(generation, name):
+    dvt = load_person_dvt(generation, name, "ukb_pca")
+    frac_hom = sum((dvt.paternal == dvt.maternal)) / len(dvt)
+    return frac_hom
+
+
+def get_generation_frac_hom(generation):
+    names = load_generation_names(generation)
+    data = []
+    for name in names:
+        frac_hom = get_person_frac_hom(generation, name)
+        entry = {
+            "generation": generation,
+            "name": name,
+            "frac_hom": frac_hom
+        }
+        data.append(entry)
+    return pd.DataFrame(data)
+
+
+def store_homozygosity(ncores=9):
+    tasks = list(range(N_GENERATIONS + 1))
+
+    with mp.Pool(processes=ncores) as pool:
+        data_all = pool.map(get_generation_frac_hom, tasks)
+
+    dh = pd.concat(data_all, ignore_index=True)
+    save_df(dh, "frac_hom")
+
+
+
+
+
 
 
 

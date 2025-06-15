@@ -1,5 +1,4 @@
 from paul import *
-from setup import *
 from plotting import plot_parameters, plot_simulation_results
 from checks import run_checks
 
@@ -14,6 +13,8 @@ def save_results():
     save_generation_scores()
     save_intergenerational_scores()
     save_freq_vs_weight()
+    store_ukb_pca_map()
+    store_ukb_pca_array()
 
 
 def main():
