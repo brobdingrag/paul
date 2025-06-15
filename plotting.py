@@ -243,22 +243,25 @@ def plot_embryo_dists():
         binwidth = 0.1
         color_main = 'lightgrey' if generation >= 0 else 'purple'
         sns.histplot(scores_embryos, ax=ax, color=color_main, 
-                     stat='count',
+                     stat='count', 
+                     edgecolor=None,
                      binrange=binrange, binwidth=binwidth)
 
-        legend_options = {"borderpad": 0.6, "bbox_to_anchor": (0, 0.95), "loc": "upper left"}
+        legend_options = {"borderpad": 0.6, "bbox_to_anchor": (0, 0.95), 
+                          "loc": "upper left", "frameon": False}
         if generation == -1:
             ax.legend(["Actual\nchildren"], **legend_options)
         else:
             scores_babies = di[(di.generation == generation) & (di.selected)].embryo_score_normalized / scale
             sns.histplot(scores_babies, ax=ax, color="purple", 
                          stat='count',
+                         edgecolor=None,
                          binrange=binrange, binwidth=binwidth)
             ax.legend(["Embryos", "Babies"], **legend_options)
 
         # X axis
         ax.set_xlim(binrange)
-        ax.set_xlabel("PGS (Cent.)")
+        ax.set_xlabel("PGS (Centered)")
         ax.sign_xscale()
 
         # Y axis
@@ -270,8 +273,8 @@ def plot_embryo_dists():
         ax.remove_top_right_spines()
         ax.set_title(_get_title(generation))
 
-        ax.text(0.04, 0.72, s=f"Std. dev. {scores_embryos.std():.2f}",
-                transform=ax.transAxes,
+        ax.text(0.04, 0.71, s=f"Std. dev. {scores_embryos.std():.2f}",
+                transform=ax.transAxes, 
                 fontsize=10, color="black", alpha=0.5)
 
     save_fig(fig, "embryo_dists", pad_inches=0.4, h_pad=4)

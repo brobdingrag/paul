@@ -627,4 +627,130 @@ def load_freq_vs_weight():
 
 
 
+def get_gamete_ancestry_chunks(parent_ancestry, parent_meiosis):
+        
+    gamete_ancestry_chunks = []
+
+    for chrom in iterate_autosomes():
+        ancestry_chunks = parent_ancestry[parent_ancestry.chrom == chrom]
+        gamete_chunks = parent_meiosis[parent_meiosis.chrom == chrom]
+
+        for _, gamete_chunk in gamete_chunks.iterrows():
+            parental_chrom = "paternal" if gamete_chunk.grandparent == "Grandpa" else "maternal"
+            overlapping_ancestry_chunks = ancestry_chunks[
+                                            (ancestry_chunks.member == parental_chrom) & 
+                                            (ancestry_chunks.pos_start <= gamete_chunk.pos_end) & 
+                                            (ancestry_chunks.pos_end >= gamete_chunk.pos_start)
+                                            ]
+            for _, ancestry_chunk in overlapping_ancestry_chunks.iterrows():
+                gamete_ancestry_chunk = {
+                    "chrom": chrom,
+                    "pos_start": max(ancestry_chunk.pos_start, gamete_chunk.pos_start),
+                    "pos_end": min(ancestry_chunk.pos_end, gamete_chunk.pos_end),
+                    "ancestor": ancestry_chunk.ancestor,
+                    "ancestor_member": ancestry_chunk.ancestor_member,
+                }
+                gamete_ancestry_chunks.append(gamete_ancestry_chunk)
+            
+    return pd.DataFrame(gamete_ancestry_chunks)
+
+
+def save_ancestry_chunks():
+        
+    di = load_intergenerational_scores() 
+    dm = load_meioses()
+
+    # Initialize the ancestry datafram
+    generation = 0
+    data = []
+    for name in load_generation_names(generation):
+        
+        for chrom in iterate_autosomes():
+            
+            ancestor = name
+
+            for member in ["paternal", "maternal"]:
+
+                entry = {
+                    "generation": generation, 
+                    "name": name,
+                    "chrom": chrom,
+                    "pos_start": 0,
+                    "pos_end": CHROMOSOME_LENGTHS[str(chrom)],
+                    "member": member,
+                    "ancestor": ancestor,
+                    "ancestor_member": member,
+                }
+
+                data.append(entry)
+
+    dfa = pd.DataFrame(data)
+
+    for generation in range(1, N_GENERATIONS + 1):
+
+        print(f"Generation {generation}")
+
+        dc = load_couples(generation-1)
+
+        names = load_generation_names(generation)
+
+        data_generation = []
+        for name in tqdm(names):
+                
+            # Get the genesis of the person 
+            genesis = di[(di.generation == generation-1) & (di.name == name)].squeeze()
+
+            # Get the dad and mom of the person
+            dad, mom = genesis.dad, genesis.mom
+
+            # Get the meiosis numbers of the dad and mom
+            sperm_meiosis_num, egg_meiosis_num = genesis.sperm_meiosis_num, genesis.egg_meiosis_num
+
+            # Double check that the dad and mom were a couple in the previous generation
+            couple = dc[(dc.name_dad == dad) & (dc.name_mom == mom)].squeeze()
+            assert not couple.empty
+
+            # Get Dad's ancestry
+            dad_ancestry = dfa[(dfa.generation == generation-1) & (dfa.name == dad)]
+
+            # Get Dad's meiosis (his sperm)
+            sperm_meiosis = dm[(dm.meiosis_num == sperm_meiosis_num) & (dm.parent == "Dad")]
+
+            # Get Mom's ancestry
+            mom_ancestry = dfa[(dfa.generation == generation-1) & (dfa.name == mom)]
+
+            # Get Mom's meiosis (her egg)
+            egg_meiosis = dm[(dm.meiosis_num == egg_meiosis_num) & (dm.parent == "Mom")]
+
+            # Get the gamete ancestry chunks
+            sperm_ancestry_chunks = get_gamete_ancestry_chunks(dad_ancestry, sperm_meiosis)
+            egg_ancestry_chunks = get_gamete_ancestry_chunks(mom_ancestry, egg_meiosis)
+            
+            sperm_ancestry_chunks['member'] = "paternal"
+            egg_ancestry_chunks['member'] = "maternal"
+
+            dfa_person = pd.concat([sperm_ancestry_chunks, egg_ancestry_chunks])
+            dfa_person['name'] = name
+
+            data_generation.append(dfa_person)
+
+        dfa_generation = pd.concat(data_generation)
+        dfa_generation['generation'] = generation
+        dfa = pd.concat([dfa, dfa_generation])
+
+    save_df(dfa, "ancestry")
+
+
+def load_ancestry(generation=None):
+    dfa = load_df("ancestry")
+    if generation is not None:
+        dfa = dfa[dfa.generation == generation]
+    return dfa
+
+
+
+
+
+
+
 
