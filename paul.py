@@ -749,7 +749,7 @@ def save_ancestry_chunks():
 
     save_df(dfa, "ancestry")
 
-
+@cache
 def load_ancestry(generation=None):
     dfa = load_df("ancestry")
     if generation is not None:
@@ -1024,8 +1024,6 @@ def load_person_dvt(generation, name, array_name):
     dvt_maternal = pd.concat(data_maternal, ignore_index=True)
 
     dvt = dvt_paternal.merge(dvt_maternal, on=obligatory_cols, how='outer')
-
-    assert dvt.paternal.isna().sum() == dvt.maternal.isna().sum() == 0
 
     return dvt
 

@@ -24,5 +24,9 @@
 
 ![](images/freq_vs_weight.png)
 
+![](images/genetic_material.png)
+
+![](images/homozygosity_ecdf.png)
+
 
 

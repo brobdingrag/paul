@@ -6,7 +6,8 @@ def plot_parameters():
     plot_male_female_meiosis_maps()
     plot_male_female_n_crossovers()
     plot_pmf_n_embryos()
-    
+    plot_final_population_genetic_material()
+
 
 def plot_simulation_results():
     plot_pgs_dist_generations()
@@ -15,6 +16,7 @@ def plot_simulation_results():
     plot_embryo_ranks()
     plot_freq_vs_weight()
     plot_freq_vs_weight_before_after()
+    plot_homozygosity_ecdf()
 
 
 def plot_male_female_meiosis_maps():
@@ -436,6 +438,127 @@ def plot_freq_vs_weight_before_after():
     # ax.vline(x=0.5, color='black', linewidth=0.5, alpha=0.5)
 
     save_fig(fig, "freq_vs_weight_before_after", pad_inches=0.3)
+
+
+
+
+def plot_final_population_genetic_material():
+
+    dfa = load_ancestry(generation=N_GENERATIONS)
+
+    names = load_generation_names(0)
+
+    name_to_length = {}
+    name_to_n_descendants = {}
+    for name in names:
+        dt = dfa[(dfa.ancestor == name)]
+        n_descendants = dt.name.nunique()
+        name_to_n_descendants[name] = n_descendants
+        if n_descendants == 0:
+            name_to_length[name] = 0
+        else:
+            name_to_length[name] = (dt.pos_end - dt.pos_start).sum() #/ n_descendants 
+
+    s = pd.Series(name_to_length).sort_values()
+    df = s.to_frame().reset_index().rename(columns={"index": "name", 0: "length"})
+    df['n_descendants'] = df.name.map(name_to_n_descendants)
+    # df.name = df.name.astype(str)
+
+    dg = load_generation_scores(0)
+    loc, scale = get_mad_normal(dg.score)
+    dg.score = (dg.score - loc) / scale
+
+    df = dg.merge(df, on='name', how='left')
+
+
+    fig, axs = square_fig(ncols=2)
+    ax = axs[0]
+    df.length /= sum(df.length)
+    sns.regplot(
+        data=df,
+        x="score",
+        y="length",
+        ax=ax,
+        color="black",
+        scatter_kws={"alpha": 0.4, "s": 15, "edgecolors": "none"},
+        line_kws={"color": "black", "alpha": 0.8},
+    )
+
+    # Calculate correlation
+    corr = df[["score", "length"]].corr().loc["score", "length"]
+
+    # Annotate correlation on the top right corner in red
+    ax.annotate(
+        f"Correlation: {corr:.2f}",
+        xy=(0.02, 0.98),
+        xycoords="axes fraction",
+        ha="left",
+        va="top",
+        alpha=0.8,
+    )
+    ax.remove_top_right_spines()
+    ax.percent_yscale(decimals=1, change_lim=False)
+    ax.set_nyticks(5)
+    ax.hline(y=1 / 402, color="grey", linestyle="--", 
+            label="Equal\nrepresentation")
+    ax.text(-3.15, 1 / 402+0.00004, "1/402", alpha=0.76,
+            va="bottom", ha="left", fontsize=10)
+    ax.set_xticks(range(-3, 4, 1))
+    ax.set_xlim(-3.2, 3.2)
+    # ax.legend(loc="lower right")
+    # ax.sign_xscale()
+    # ax.remove_xticks()
+    ax.set_xlabel("Polygenic score")
+    ax.set_ylabel("Fraction of genetic material")
+    ax.set_ylim(-0.0002, 0.0045)
+    # ax.set_yticks([0, 5*1e10, 10*1e10, 15*1e10], 
+    #               labels=["0 Gb", "50 Gb", "100 Gb", "150 Gb"])
+
+    ax = axs[1]
+    sns.histplot(
+        data=df,
+        x="n_descendants",
+        ax=ax,
+        color="grey",
+        bins=70,
+        edgecolor=None,
+    )
+    ax.remove_top_right_spines()
+    ax.set_nyticks(6)
+    ax.set_nxticks(4)
+    ax.comma_xscale()
+    ax.set_ylabel("Count")
+    ax.set_xlabel("Number of genetic descendants")
+
+    save_fig(fig, "genetic_material", tight_layout=True, w_pad=4, pad=3)
+
+
+def plot_homozygosity_ecdf():
+    dh = load_df("frac_hom")
+    palette = load_palette()
+
+    fig, ax = golden_fig()
+
+    for generation in range(N_GENERATIONS + 1):
+        sns.ecdfplot(
+            data=dh[dh.generation == generation],
+            alpha=0.5,
+            x='frac_hom',
+            # linestyle="--" if generation % 2 == 1 else "-",
+            linewidth=1,
+            color=palette[generation],
+            ax=ax,
+        )
+
+    ax.set_xlim(0.76, 0.77)
+    ax.percent_xscale(change_lim=False, decimals=1)
+    ax.percent_yscale()
+    ax.grid()
+    ax.remove_top_right_spines()
+    ax.set_xlabel("Homozygosity")
+    save_fig(fig, "homozygosity_ecdf", pad_inches=0.25)
+
+
 
 
 

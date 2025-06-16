@@ -15,6 +15,7 @@ def save_results():
     save_freq_vs_weight()
     store_ukb_pca_map()
     store_ukb_pca_array()
+    store_homozygosity()  # 136 minutes
 
 
 def main():
