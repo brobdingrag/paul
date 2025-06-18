@@ -542,7 +542,7 @@ def plot_homozygosity_ecdf():
     for generation in range(N_GENERATIONS + 1):
         sns.ecdfplot(
             data=dh[dh.generation == generation],
-            alpha=0.5,
+            alpha=0.7,
             x='frac_hom',
             # linestyle="--" if generation % 2 == 1 else "-",
             linewidth=1,
@@ -550,9 +550,24 @@ def plot_homozygosity_ecdf():
             ax=ax,
         )
 
+    # Create custom legend handles
+    def get_label(generation):
+        if generation == 0:
+            return f"0 (1kg EUR)"
+        return generation
+
+    handles = [
+        Line2D([0], [0], color=palette[i], alpha=0.8, lw=1.2, label=get_label(i))
+        for i in range(N_GENERATIONS+1)
+    ]
+
+    ax.legend(handles=handles, title="Generations\nof selection", 
+              frameon=False, loc="center right", bbox_to_anchor=(0.985, 0.5)) 
+
     ax.set_xlim(0.76, 0.77)
     ax.percent_xscale(change_lim=False, decimals=1)
     ax.percent_yscale()
+    ax.set_ylabel("Cumulative percentage")
     ax.grid()
     ax.remove_top_right_spines()
     ax.set_xlabel("Homozygosity")

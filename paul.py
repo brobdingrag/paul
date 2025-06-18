@@ -213,22 +213,54 @@ def load_n_meioses(force_reload=False):
     return n_meioses
 
 
-def load_meioses():
-    dm = load_df("meioses")
-    dm = dm[dm.chrom != "X"]
-    dm.chrom = dm.chrom.astype(int)
-    exclude_cols = [
-        "sex",
-        'pos_start_hg19', 'pos_end_hg19', 
-        'pos_start_hg19_query', 'pos_end_hg19_query'
-        ]
-    dm.rename(columns={
-        "pos_start_hg38": "pos_start",
-        "pos_end_hg38": "pos_end"
-        }, inplace=True)
-    dm = dm.drop(columns=exclude_cols)
-    dm.rename(columns={"individual": "meiosis_num"}, inplace=True)
-    return dm
+def load_meioses(force_reload=False):
+    if not os.path.exists("data/meioses_fixed.csv") or force_reload:
+        dm = load_df("meioses")
+        dm = dm[dm.chrom != "X"]
+        dm.chrom = dm.chrom.astype(int)
+        exclude_cols = [
+            "sex",
+            'pos_start_hg19', 'pos_end_hg19', 
+            'pos_start_hg19_query', 'pos_end_hg19_query'
+            ]
+        dm.rename(columns={
+            "pos_start_hg38": "pos_start",
+            "pos_end_hg38": "pos_end"
+            }, inplace=True)
+        dm = dm.drop(columns=exclude_cols)
+        dm.rename(columns={"individual": "meiosis_num"}, inplace=True)
+        dm.reset_index(drop=True, inplace=True)
+        
+        # Make the pos_start and pos_end next to each other
+        # a dozen or so hg19 -> hg38 alignment issues
+        for i, row in dm.iterrows():
+            if i == len(dm) - 2:
+                break
+            row_next = dm.iloc[i+ 1]
+            assert row.name == i
+            assert row_next.name == i + 1
+            if row.chrom == row_next.chrom and row.meiosis_num == row_next.meiosis_num:
+                if row.pos_end + 1 != row_next.pos_start:
+                    dm.loc[dm.index == i + 1, "pos_start"] = row.pos_end + 1
+                    # difference = row_next.pos_start - (row.pos_end + 1)
+                    # counts[difference] += 1
+        
+        # Check that all the chunks are adjacent now
+        for i, row in dm.iterrows():
+            if i == len(dm) - 2:
+                break
+            row_next = dm.iloc[i+ 1]
+            assert row.name == i
+            assert row_next.name == i + 1
+            if row.chrom == row_next.chrom and row.meiosis_num == row_next.meiosis_num:
+                assert row.pos_end + 1 == row_next.pos_start
+        
+        save_df(dm, "meioses_fixed")
+
+    return load_df("meioses_fixed")
+
+
+
 
 
 def get_random_meiosis():
