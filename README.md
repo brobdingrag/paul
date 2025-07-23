@@ -21,7 +21,7 @@ By comparison, embryo selection is unsexy. Parents are merely selecting among si
 [(above image from “How to Make Superbabies”)](https://www.lesswrong.com/posts/DfrSZaf3JC8vJdbZL/how-to-make-superbabies)
 
 
-A couple undergoing IVF *already* faces a selection decision: out of roughly ten embryos, which should they transfer to the uterus the hope of a live birth? 
+A couple undergoing IVF *already* faces a selection decision: out of roughly ten embryos, which should they transfer to the uterus in the hopes of a live birth? 
 Instead of choosing an embryo at random, the couple could decide to genotype their embryos at a cost of roughly $500 per embryo. 
 This provides them with information about each embryo — such as the predicted cognitive ability or risk for certain diseases. 
 
