@@ -1,7 +1,5 @@
 
 
-
-
 ## [Kefitzat haderech](https://en.wikipedia.org/wiki/Kefitzat_haderech)
 
 
@@ -11,8 +9,7 @@
 Much has been said on [Less Wrong](https://www.lesswrong.com/posts/DfrSZaf3JC8vJdbZL/how-to-make-superbabies) about multiplex gene editing, gametogenesis, artificial wombs, and other paths to genetically advantageous "superbabies." The use of those castle-in-the-sky technologies to alter human genetic material would be an inflection point in history. However, these technologies are still in development and unavailable for practical use. Even if they became accessible, their safety and legality would be an open question.
 
 
-By comparison, embryo selection is unsexy. Parents are merely selecting among sibling embyros containing differnt mashups of their own genetic material. The benefits to parents are determined by the number of viable embryos they have and the quality of the genetic predictors they use. But embryo selection is possible today! You can do it for your own children, safely, legally and inexpensively. 
-
+By comparison, embryo selection is unsexy. Parents are simply choosing among sibling embryos, each with a different combination of the parents' own genetic material. The benefits depend on the number of viable embryos available and the quality of the genetic predictors used. However, embryo selection is available today — you can do it for your own children, safely, legally, and at a reasonable cost.
 
 
 <img src="images/make_superbabies_working_today.png" width="400">
@@ -21,9 +18,7 @@ By comparison, embryo selection is unsexy. Parents are merely selecting among si
 [(above image from “How to Make Superbabies”)](https://www.lesswrong.com/posts/DfrSZaf3JC8vJdbZL/how-to-make-superbabies)
 
 
-A couple undergoing IVF *already* faces a selection decision: out of roughly ten embryos, which should they transfer to the uterus in the hopes of a live birth? 
-Instead of choosing an embryo at random, the couple could decide to genotype their embryos at a cost of roughly $500 per embryo. 
-This provides them with information about each embryo — such as the predicted cognitive ability or risk for certain diseases. 
+When a couple undergoes IVF, they *already* face a selection decision: out of roughly ten embryos, which should they transfer to the uterus in the hope of a live birth? By genotyping their embryos—at a cost of about $400 each, or $4,000 for a typical batch of ten—the couple can make an *informed* decision. For example, a couple could learn that one of their embryos has aneuploidy and would likely result in a miscarriage. Other genetic conditions can be identified as well, for example a rare form of blindness or outlier risk of breast cancer. 
 
 
 In this piece, we explore the long-run consequences of aggresive embryo selection for a trait. We run a highly realistic *in silico* smulation of eight generations of embryos selection with IVF. We use a small population of the publicly available whole genomes of 402 unrelated European-ancestry indivdiuals. 

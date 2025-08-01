@@ -575,6 +575,56 @@ def plot_homozygosity_ecdf():
 
 
 
+def plot_depletion_of_variance():
+    dg = load_generation_scores()
+    loc, scale = get_mad_normal(dg[dg.generation == 0].score)
+    dg.score = (dg.score - loc) / scale
+
+    ds = pd.DataFrame({"st_dev": dg.groupby('generation')['score'].std(), 
+    "n": dg.groupby('generation')['name'].nunique()
+    })
+    def se_st_dev(st_dev, n):
+        return st_dev / np.sqrt( 2 * (n - 1))
+    ds['se'] = ds.apply(lambda row: se_st_dev(row['st_dev'], row['n']), axis=1)
+    ds.reset_index(inplace=True)
+
+    fig, ax = square_fig()
+    fig.suptitle("Depletion of Variance?", fontsize=14, y=1.03)
+    x_var = "generation"
+    y_var = "st_dev"
+    ax.errorbar(
+        x=ds[x_var], 
+        y=ds[y_var], 
+        yerr=ds["se"], 
+        marker="o", 
+        color="black", 
+        alpha=0.5, 
+        capsize=3, 
+        capthick=1, 
+        label="± one standard error",
+    )
+
+    for _, row in ds.iterrows():
+        ax.text(
+            x=row[x_var] + 0.1, 
+            y=row[y_var] + 0.01, 
+            s=f"{comma(row['n'])}", 
+            ha="left", 
+            va="bottom", 
+            fontsize=8, alpha=0.8,
+        )
+    ax.remove_top_right_spines()
+    ax.set_ylim(0.5, 1.12)
+    ax.set_yticks(np.arange(0.5, 1.1, 0.1))
+    ax.grid(axis="y")
+    ax.set_ylabel("Pop. SD of PGS")
+    ax.set_xlabel("Generations of selection")
+    ax.set_nxticks(9)
+    save_fig(fig, "st_dev_generations")
+
+
+
+    
 
 
 
