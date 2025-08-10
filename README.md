@@ -72,6 +72,11 @@ The polygenic score we use integrates thousands of SNPs (single nucleotide polym
 *The program of repeated embryo selection results in increasing levels of the polygenic score from generation to generation.*
 
 
+<img src="images//st_dev_generations.png" width="600">
+
+*The polygenic score initially shows depeleted variance but then stabilizes.*
+
+
 
 
 
