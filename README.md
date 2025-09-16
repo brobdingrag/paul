@@ -139,13 +139,21 @@ The polygenic score we use integrates thousands of SNPs (single nucleotide polym
 
 *In our simulation, the frequency of SNPs in the polygenic height predictor shifted between generations as they repeated the process of embryo selection. Alleles correlating with increased height tended to be swept up in frequency (red lines), while alleles correlating with decreased height tended to be swept down in frequency (blue lines).*
 
+<br>
 
-
+No issues of consanguinity 8 generations later, the homozygosity has the same distribution in the last generation as in first. There's a big drop in homozygosity between generation 0 and generation 1 due to mating populations randomly across Europea, e.g. Italians mating with British.
 
 <img src="images/homozygosity_ecdf.png" width="500">
 
 *In our simulation, embryo selection for height did not significantly increase homozygosity in the population when repeated over many generations (hundreds of years).*
 
+<br>
+
+The left panel of the chart below shows the fraction of the final generation's genetic material that comes from each founding individual (black dots) as a function of their polygenic score. As expected, the Euroepans with higher polygenic scores pass down more of their DNA to the 8th generation than the Europeans with a low polygenic score, but not by much: the correlation is only 0.09. 
+
+If the DNA of the founders were distributed randomly into their descendants each would contribute only 1/402 of the DNA of the final generation. (402 founders so if it's perfectly fair then each makes up 1/402 of the DNA of the descendants.) You can see that the DNA of the founders is distributed roughly evenly, around 1/402, with some drop outs (as those people were in the 5% of couples that were infertile). 
+
+The right panel of the chart below shows the number of descendants in the final generation containing DNA segments at all from each founder. The average founder passes DNA down to about 2,000 descendants in the 8th generation, some founders' DNA can be found in only ~1,000 people. And again, some do not have any descendants as they or their partner was infertile. 
 
 <img src="images/genetic_material.png" width="500">
 
