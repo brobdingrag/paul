@@ -5,7 +5,7 @@
 
 This is a repository for the code and images relating to a simulation I have been working on.
 
-In this piece, we explore the long-run consequences of aggresive embryo selection for a trait. We simulate of eight generations of embryo selection with IVF. We use the publicly available whole genomes of 402 unrelated European-ancestry indivdiuals. 
+It explores the long-run consequences of aggresive embryo selection for a trait. We simulate of eight generations of embryo selection with IVF. We use the publicly available whole genomes of 402 unrelated European-ancestry indivdiuals. 
 
 We show:
   - Population-scale embryo selection can be realistically simulated.
