@@ -165,15 +165,14 @@ def plot_pgs_dist_generations(n_generations=N_GENERATIONS):
     # Create custom legend handles
     def get_label(generation):
         if generation == 0:
-            return f"0 (1kg EUR)"
+            return f"0 (402 EUR genomes)"
         return generation
-
     handles = [
         Line2D([0], [0], color=palette[i], lw=lw, label=get_label(i))
         for i in range(n_generations+1)
     ]
 
-    ax.legend(handles=handles, title="Generations\nof selection", frameon=False, loc="upper left") 
+    ax.legend(handles=handles, title="Generations\nof selection", frameon=False, loc="upper left")
 
     ax.naked_top()
     ax.set_xticks(range(-6, 10, 2))
