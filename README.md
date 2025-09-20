@@ -3,27 +3,9 @@
 ## [Kefitzat haderech](https://en.wikipedia.org/wiki/Kefitzat_haderech)
 
 
+This is a repository for the code and images relating to a simulation I have been working on.
 
-## Background
-
-Much has been said on [Less Wrong](https://www.lesswrong.com/posts/DfrSZaf3JC8vJdbZL/how-to-make-superbabies) about multiplex gene editing, gametogenesis, artificial wombs, and other paths to genetically advantageous "superbabies." The use of those castle-in-the-sky technologies to alter human genetic material would be an inflection point in history. However, these technologies are still in development and unavailable for practical use. Even if they became accessible, their safety and legality would be an open question.
-
-
-By comparison, embryo selection is unsexy. Parents are simply choosing among sibling embryos, each with a different combination of the parents' own genetic material. The benefits depend on the number of viable embryos available and the quality of the genetic predictors used. However, embryo selection is available today — you can do it for your own children, safely, legally, and at a reasonable cost.
-
-
-<img src="images/make_superbabies_working_today.png" width="400">
-
-
-[(above image from “How to Make Superbabies”)](https://www.lesswrong.com/posts/DfrSZaf3JC8vJdbZL/how-to-make-superbabies)
-
-
-When a couple undergoes IVF, they *already* face a selection decision: out of roughly ten embryos, which should they transfer to the uterus in the hope of a live birth? By genotyping their embryos—at a cost of about $400 each, or $4,000 for a typical batch of ten—the couple can make an *informed* decision. For example, a couple could learn that one of their embryos has aneuploidy and would likely result in a miscarriage. Other genetic conditions can be identified as well, for example a rare form of blindness or outlier risk of breast cancer. 
-
-
-In this piece, we explore the long-run consequences of aggresive embryo selection for a trait. We run a highly realistic *in silico* smulation of eight generations of embryos selection with IVF. We use a small population of the publicly available whole genomes of 402 unrelated European-ancestry indivdiuals. 
-
-
+In this piece, we explore the long-run consequences of aggresive embryo selection for a trait. We simulate of eight generations of embryo selection with IVF. We use the publicly available whole genomes of 402 unrelated European-ancestry indivdiuals. 
 
 We show:
   - Population-scale embryo selection can be realistically simulated.
@@ -32,12 +14,12 @@ We show:
   <!-- - Embryo selection can be performed without significant side effects to other polygenic scores (except where the trait of interest causally influences those traits) -->
 
 
-## The simulation
+## Background
 
 
-We start with the genomes of 403 unrelated European-ancestry individuals available in the public domain by the [1000 Genomes Project](https://www.internationalgenome.org/data-portal/data-collection/30x-grch38). These are the full genomes of actual people recruited in the 1980s from Italy, Spain, Great Britain, and 'Central Europeans' in Utah [(i.e. mormons)](https://www.bostonreview.net/articles/duana-fullwiley-dna-and-our-twenty-first-century-ancestors/). 
+We start with the genomes of 402 unrelated European-ancestry individuals available in the public domain by the [1000 Genomes Project](https://www.internationalgenome.org/data-portal/data-collection/30x-grch38). These are the full genomes of actual people recruited in the 1980s from Italy, Spain, Great Britain, and 'Central Europeans' in Utah. 
 
-We imagine a scenario like the TV show Lost where these individuals are stranded on an island, or perhaps are colonizers of Mars stranded on the distant red planet. Wherever they are, we suppose that they are fully equipped with the technology for in vitro fertilization (IVF) and embryo screening.
+We imagine a scenario like the TV show *Lost*, where these individuals are stranded on an island. We suppose that they are fully equipped with the technology for in vitro fertilization (IVF) and embryo screening.
 
 These people make up our 0th generation. To simulate reproduction, we randomly pair 402 of them into 201 male/female couples. On this island, sex is for fun, but [IVF is for babies](https://ivfisforbabies.com/). So each couple elects to undergo two cycles of IVF.
 
@@ -59,17 +41,17 @@ Since parent genomes are phased, we realistically simulate meiosis (assembly of 
 
 <img src="images/genomic_prediction_height_corr.jpg" width="500">
 
-*[Lello et al. (2018)](https://academic.oup.com/genetics/article/210/2/477/5931053) Polygenic height predictors accurately predict adult height to within an inch of error. These predictors most of the heredity of height.*
+*[Lello et al. (2018)](https://academic.oup.com/genetics/article/210/2/477/5931053) Polygenic height predictors accurately predict adult height to within an inch of error. These predictors capture most of the heredity of height.*
 
-The polygenic score we use integrates thousands of SNPs (single nucleotide polymorphisms, i.e., individual alleles in the human genome that vary in the population). The predictor takes into account only common SNPs (i.e., those that have a minor allele frequency of at least 0.1%). Each SNP of interest is assigned an effect size corresponding to the relative effect of the SNP on height. In the reference population, SNPs with larger effects on height tend to be rarer. The alleles an embryo carries are weighted by their estimated effects on height and then summed to produce its polygenic score.
-
-
+The polygenic score we use integrates thousands of SNPs (single nucleotide polymorphisms, i.e., individual alleles in the human genome which vary in the population). The predictor takes into account only common SNPs (i.e., those that have a minor allele frequency of at least 0.1%). Each SNP of interest is assigned an effect size corresponding to the relative effect of the SNP on height. In the reference population, SNPs with larger effects on height tend to be rarer. The alleles an embryo carries are weighted by their estimated effects on height and then summed to produce its polygenic score.
 
 
-## Images
+
+
+# Images - presented without much commentary (for now)
 <img src="images/pgs_dist_generations.png" width="600">
 
-*The program of repeated embryo selection results in increasing levels of the polygenic score from generation to generation.*
+*The program of embryo selection results in increasing levels of the polygenic score from generation to generation.*
 
 
 <img src="images//st_dev_generations.png" width="600">
@@ -78,12 +60,9 @@ The polygenic score we use integrates thousands of SNPs (single nucleotide polym
 
 
 
-
-
-
 <img src="images/freq_vs_weight_before_after.png" width="600">
 
-*The effect and frequency of the 20% largest effect-size SNPs in the height PGS. Each line starts at the frequency of the SNP in generation 0 (the original 403 genomes from 1000 Human Henomes project) and ends with a dot at the frequency of the SNP in generation 8. SNPs that have a positive effect on height tend to be swept up in frequency (red lines), while alleles that reduce height tend to be swept down in frequency (blue lines).*
+*The effect and frequency of the 20% largest effect-size SNPs in the height PGS. Each line starts at the frequency of the SNP in generation 0 (the original 402 genomes from 1000 Human Henomes project) and ends with a dot at the frequency of the SNP in generation 8. SNPs that have a positive effect on height tend to be swept up in frequency (red lines), while alleles that reduce height tend to be swept down in frequency (blue lines).*
 
 
 
@@ -120,7 +99,7 @@ The polygenic score we use integrates thousands of SNPs (single nucleotide polym
 
 <img src="images/embryo_ranks.png" width="400">
 
-*In our simulation, each couple transfers one embryo at a time, in order of highest polygenic height score, until they have three live births or run out of embryos. Each transfer has a 65% chance of resulting in a live birth. Above, the members of generations 1-8 are shown according to their initial rank among their parent couple's embryo cohort.*
+*Each couple transfers one embryo at a time, in order of highest polygenic height score, until they have three live births or run out of embryos. Each transfer has a 65% chance of resulting in a live birth. Above, the members of generations 1-8 are shown according to their initial rank among their parent couple's embryo cohort.*
 
 
 
@@ -129,7 +108,7 @@ The polygenic score we use integrates thousands of SNPs (single nucleotide polym
 
 <img src="images/embryo_dists.png" width="600">
 
-*In our simulation, babies born tend to be drawn from the top one-third of their parent couple's embryo cohort with respect to polygenic height score.*
+*Babies born tend to be drawn from the top one-third of their parent couple's embryo cohort with respect to polygenic height score.*
 
 
 
@@ -137,7 +116,7 @@ The polygenic score we use integrates thousands of SNPs (single nucleotide polym
 
 <img src="images/freq_vs_weight.png" width="600">
 
-*In our simulation, the frequency of SNPs in the polygenic height predictor shifted between generations as they repeated the process of embryo selection. Alleles correlating with increased height tended to be swept up in frequency (red lines), while alleles correlating with decreased height tended to be swept down in frequency (blue lines).*
+*The frequency of SNPs in the polygenic height predictor shifted between generations as they repeated the process of embryo selection. Alleles correlating with increased height tended to be swept up in frequency (red lines), while alleles correlating with decreased height tended to be swept down in frequency (blue lines).*
 
 <br>
 
@@ -145,7 +124,7 @@ No issues of consanguinity 8 generations later, the homozygosity has the same di
 
 <img src="images/homozygosity_ecdf.png" width="500">
 
-*In our simulation, embryo selection for height did not significantly increase homozygosity in the population when repeated over many generations (hundreds of years).*
+*Embryo selection for height did not significantly increase homozygosity in the population when repeated over many generations (hundreds of years).*
 
 <br>
 
@@ -157,6 +136,6 @@ The right panel of the chart below shows the number of descendants in the final 
 
 <img src="images/genetic_material.png" width="500">
 
-*In our simulation, embryo selection for height did not significantly decrease an individual’s genetic material from being represented among their descendants when repeated over many generations (hundreds of years).*
+*Embryo selection for height did not significantly decrease an individual’s genetic material from being represented among their descendants when repeated over many generations (hundreds of years).*
 
 
