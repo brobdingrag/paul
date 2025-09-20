@@ -3,6 +3,13 @@
 ## [Kefitzat haderech](https://en.wikipedia.org/wiki/Kefitzat_haderech)
 
 
+
+
+> "These experiments began near the end of the nineteenth century and still continue; there are now more than 100 generations of selection. Remarkably, selection for high oil content and similarly, but less strikingly, selection for high protein, continue to make progress. There seems to be no diminishing of selectable variance in the population. The effect of selection is enormous: the difference in oil content between the high and low selected strains is some 32 times the original standard deviation. This is all the more remarkable, in that only 12 years were selected each generation. Since the original variance was not large, this experiment dramatically illustrates the ability of Mendelian populations to contain hidden variability that, when brought out, goes far beyond the existing limits."  
+> — Crow, 2010
+
+
+
 This is a repository for the code and images relating to a simulation I have been working on. This simulation can be easily reproduced since all data and tools utilized are publicly available.
 
 
