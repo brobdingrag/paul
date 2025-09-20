@@ -3,7 +3,8 @@
 ## [Kefitzat haderech](https://en.wikipedia.org/wiki/Kefitzat_haderech)
 
 
-This is a repository for the code and images relating to a simulation I have been working on.
+This is a repository for the code and images relating to a simulation I have been working on. This simulation can be easily reproduced since all data and tools utilized are publicly available.
+
 
 It explores the long-run consequences of aggresive embryo selection for a trait. We simulate of eight generations of embryo selection with IVF. We use the publicly available whole genomes of 402 unrelated European-ancestry indivdiuals. 
 
